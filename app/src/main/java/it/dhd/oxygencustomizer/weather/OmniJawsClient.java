@@ -390,6 +390,10 @@ public class OmniJawsClient {
     }
 
     public void addObserver(OmniJawsObserver observer) {
+        if (mObserver.contains(observer)) {
+            return;
+        }
+
         if (mObserver.isEmpty()) {
             if (mReceiver != null) {
                 try {

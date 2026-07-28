@@ -95,8 +95,6 @@ public class CurrentWeatherView extends LinearLayout implements OmniJawsClient.O
 
         inflateView();
 
-        enableUpdates();
-
         ThemeEnabler.registerThemeChangedListener(this::reloadWeatherBg);
     }
 
@@ -141,6 +139,12 @@ public class CurrentWeatherView extends LinearLayout implements OmniJawsClient.O
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
         enableUpdates();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        disableUpdates();
     }
 
     public void updateSizes(int weatherTextSize, int weatherImageSize, String name) {
@@ -209,7 +213,10 @@ public class CurrentWeatherView extends LinearLayout implements OmniJawsClient.O
         if (!TextUtils.isEmpty(errorText)) {
             mLeftText.setText(errorText);
         } else {
-            reQuery = true;
+            if (errorReason != OmniJawsClient.EXTRA_ERROR_DISABLED &&
+                errorReason != OmniJawsClient.EXTRA_ERROR_NO_PERMISSIONS) {
+                reQuery = true;
+            }
         }
         if (reQuery) {
             queryAndUpdateWeather();

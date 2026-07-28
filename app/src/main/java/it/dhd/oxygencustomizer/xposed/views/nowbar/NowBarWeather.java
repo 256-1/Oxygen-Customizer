@@ -55,7 +55,6 @@ public class NowBarWeather extends RelativeLayout implements OmniJawsClient.Omni
         mWeatherClient = new OmniJawsClient(context);
 
         inflateView();
-        enableUpdates();
         setBarBackground();
 
         setOnLongClickListener(v -> {
@@ -104,6 +103,14 @@ public class NowBarWeather extends RelativeLayout implements OmniJawsClient.Omni
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         enableUpdates();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (mWeatherClient != null) {
+            mWeatherClient.removeObserver(this);
+        }
     }
 
     @SuppressLint("SetTextI18n")
@@ -172,7 +179,10 @@ public class NowBarWeather extends RelativeLayout implements OmniJawsClient.Omni
         if (!TextUtils.isEmpty(errorText)) {
             mCity.setText(errorText);
         } else {
-            reQuery = true;
+            if (errorReason != OmniJawsClient.EXTRA_ERROR_DISABLED &&
+                errorReason != OmniJawsClient.EXTRA_ERROR_NO_PERMISSIONS) {
+                reQuery = true;
+            }
         }
         if (reQuery) {
             queryAndUpdateWeather();
