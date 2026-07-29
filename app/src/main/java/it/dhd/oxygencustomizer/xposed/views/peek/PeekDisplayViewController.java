@@ -27,6 +27,7 @@ public class PeekDisplayViewController {
 
     private boolean mDozing = false;
     private boolean mPeekDisplayEnabled = true;
+    private boolean mIsCallbacksRegistered = false;
 
     public PeekDisplayViewController() {
         instance = this;
@@ -48,11 +49,11 @@ public class PeekDisplayViewController {
     }
 
     private final ControllersProvider.OnDozingChanged onDozingChanged = dozing -> {
-        XposedBridge.log("PeekDisplayViewController onDozingChanged: " + dozing);
         if (mDozing == dozing) {
             return;
         }
         mDozing = dozing;
+        XposedBridge.log("PeekDisplayViewController onDozingChanged: " + dozing);
         if (mDozing) {
             resetShelves();
         }
@@ -106,9 +107,13 @@ public class PeekDisplayViewController {
     }
 
     public void registerCallbacks() {
+        if (mIsCallbacksRegistered) return;
+
         ControllersProvider.registerDozingCallback(onDozingChanged);
         ThemeEnabler.registerThemeChangedListener(this::updatePeekDisplayState);
         updatePeekDisplayState();
+
+        mIsCallbacksRegistered = true;
     }
 
     private void updatePeekDisplayState() {
@@ -116,8 +121,12 @@ public class PeekDisplayViewController {
         updateVisibility();
     }
 
-    private void unregisterCallbacks() {
+    public void unregisterCallbacks() {
+        if (!mIsCallbacksRegistered) return;
+
         ControllersProvider.unRegisterDozingCallback(onDozingChanged);
+
+        mIsCallbacksRegistered = false;
     }
 
     private void removeCurrentNotification(StatusBarNotification sbn) {

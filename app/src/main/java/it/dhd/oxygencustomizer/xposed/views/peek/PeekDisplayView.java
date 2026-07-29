@@ -676,6 +676,14 @@ public class PeekDisplayView extends LinearLayout {
         updateView();
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (!mIsSettingsInterface && mController != null) {
+            mController.unregisterCallbacks();
+        }
+    }
+
     private void updateView() {
         setVisibility(isPeekDisplayEnabled ? View.VISIBLE : View.GONE);
         if (isPeekDisplayEnabled) {
