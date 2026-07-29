@@ -132,13 +132,24 @@ public class EdgeLightView extends View {
             boolean drawBlur,
             int blurMode,
             int blurType) {
+        boolean styleChanged = this.mEdgeLightStyle != edgeLightStyle;
+        boolean widthChanged = this.mEdgeLightWidth != edgeLightWidth;
+
         this.mEdgeLightWidth = edgeLightWidth;
         this.mDrawBlur = drawBlur;
         this.mBlurType = blurType;
         this.mBlurMode = blurMode;
-        setEdgeLightStyle(edgeLightStyle); // This will also set the stroke width
         this.mCustomColor = customColor;
-        setColorMode(colorMode);
+
+        if (styleChanged || mEdgeAnimator == null) {
+            setEdgeLightStyle(edgeLightStyle);
+        } else if (widthChanged) {
+            setStrokeWidth(mEdgeLightWidth);
+        }
+
+        if (mEdgeAnimator != null) {
+            mEdgeAnimator.setBlurOptions(mDrawBlur, mBlurType, mBlurMode);
+        }
     }
 
     public void setColorMode(ColorMode colorMode) {
@@ -211,7 +222,6 @@ public class EdgeLightView extends View {
         mEdgeLightStyle = style;
         loadEdgeAnimator();
         setStrokeWidth(mEdgeLightWidth);
-        mEdgeAnimator.setScreenRadius(mCornerRadius);
         invalidate();
     }
 
@@ -256,6 +266,7 @@ public class EdgeLightView extends View {
     }
 
     public void setScreenRadius(float radius) {
+        if (this.mCornerRadius == radius) return;
         mCornerRadius = radius;
         if (mEdgeAnimator != null) {
             mEdgeAnimator.setScreenRadius(mCornerRadius);
@@ -284,8 +295,12 @@ public class EdgeLightView extends View {
                 this.mPulsing = true;
                 // Use accent color if color mode is set to notification color
                 // and pulse is not because of notification.
-                if (mColorMode == ColorMode.NOTIFICATION && reason != PULSE_REASON_NOTIFICATION) {
-                    setColor(mSettingsInterface ? ThemeUtils.getPrimaryColor(mContext) : OpUtils.getPrimaryColor(mContext));
+                if (mColorMode == ColorMode.NOTIFICATION) {
+                    if (reason != PULSE_REASON_NOTIFICATION) {
+                        setColor(mSettingsInterface ? ThemeUtils.getPrimaryColor(mContext) : OpUtils.getPrimaryColor(mContext));
+                    } else {
+                        setColorMode(mColorMode);
+                    }
                 }
                 logD("setPulsing: show()");
                 show();
