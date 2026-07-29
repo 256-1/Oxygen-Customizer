@@ -165,6 +165,12 @@ import it.dhd.oxygencustomizer.xposed.views.BatteryBarView;
  */
 public class BatteryStyleManager extends XposedMods {
 
+    private static final boolean DEBUG = false;
+    private static int ID_BATTERY_PERCENTAGE_VIEW = 0;
+    private static int ID_BATTERY_ICON_VIEW = 0;
+    private static int ID_BATTERY_TEXT = 0;
+    private static final List<Integer> ID_BATTERY_CHARGING_VIEWS = new ArrayList<>();
+
     private static final String listenPackage = SYSTEM_UI;
     private static final ArrayList<View> batteryViews = new ArrayList<>();
     private static final int BatteryIconOpacity = 100;
@@ -235,6 +241,21 @@ public class BatteryStyleManager extends XposedMods {
 
         mBatteryStockMarginLeft = mContext.getResources().getDimensionPixelSize(mContext.getResources().getIdentifier("op_status_bar_battery_icon_margin_left", "dimen", mContext.getPackageName()));
         mBatteryStockMarginRight = mContext.getResources().getDimensionPixelSize(mContext.getResources().getIdentifier("op_status_bar_battery_icon_margin_right", "dimen", mContext.getPackageName()));
+
+        try {
+            ID_BATTERY_PERCENTAGE_VIEW = mContext.getResources().getIdentifier("battery_percentage_view", "id", mContext.getPackageName());
+            ID_BATTERY_ICON_VIEW = mContext.getResources().getIdentifier("battery_icon_view", "id", mContext.getPackageName());
+            ID_BATTERY_TEXT = mContext.getResources().getIdentifier("battery_text", "id", mContext.getPackageName());
+
+            for (String s : batteryCharging) {
+                int id = mContext.getResources().getIdentifier(s, "id", SYSTEM_UI);
+                if (id != 0) {
+                    ID_BATTERY_CHARGING_VIEWS.add(id);
+                }
+            }
+        } catch (Throwable t) {
+            if (DEBUG) log("Failed to cache resource IDs: " + t.getMessage());
+        }
     }
 
     @SuppressWarnings("DiscouragedApi")
@@ -460,14 +481,18 @@ public class BatteryStyleManager extends XposedMods {
 
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                log("BatteryViewBinder bind called");
+                if (DEBUG) {
+                    log("BatteryViewBinder bind called");
+                }
                 if (param.args[0] instanceof View v) updateBatteryViewValues(v);
             }
         });
         hookAllMethods(BatteryViewBinder, "bind$updateBatteryContentView", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                log("bind$updateBatteryContentView called");
+                if (DEBUG) {
+                    log("bind$updateBatteryContentView called");
+                }
                 if (param.args[0] instanceof View v) updateBatteryViewValues(v);
             }
         });
@@ -548,23 +573,34 @@ public class BatteryStyleManager extends XposedMods {
     private void updateBatteryViewValues(View view) {
         TextView batteryOutPercentage = null;
         try {
-            batteryOutPercentage = view.findViewById(mContext.getResources().getIdentifier("battery_percentage_view", "id", mContext.getPackageName()));
-        } catch (Throwable ignored) {
-            log("battery_percentage_view not found");
-        }
+            if (ID_BATTERY_PERCENTAGE_VIEW != 0) batteryOutPercentage = view.findViewById(ID_BATTERY_PERCENTAGE_VIEW);
+        } catch (Throwable ignored) {}
         if (batteryOutPercentage != null && batteryOutPercentage.getVisibility() == View.VISIBLE) {
             mBatteryText = batteryOutPercentage;
-            batteryOutPercentage.setTextSize(TypedValue.COMPLEX_UNIT_SP, customizePercSize ? mBatteryPercSize : 12);
+
+            float targetSizeSp = customizePercSize ? mBatteryPercSize : 12;
+            float currentSizePx = batteryOutPercentage.getTextSize();
+            float targetSizePx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, targetSizeSp, mContext.getResources().getDisplayMetrics());
+
+            if (Math.abs(currentSizePx - targetSizePx) > 0.5f) {
+                batteryOutPercentage.setTextSize(TypedValue.COMPLEX_UNIT_SP, targetSizeSp);
+            }
+
+            int targetColor = batteryOutPercentage.getCurrentTextColor();
             if (!mTextAttachBatteryBar) {
                 if (mIndicateFast && isFastCharging()) {
-                    batteryOutPercentage.setTextColor(mTextFastColor);
+                    targetColor = mTextFastColor;
                 } else if (mIndicateCharging && mIsCharging) {
-                    batteryOutPercentage.setTextColor(mTextChargingColor);
+                    targetColor = mTextChargingColor;
                 } else if (mIndicatePowerSave && isPowerSaving()) {
-                    batteryOutPercentage.setTextColor(mTextPowerSaveColor);
+                    targetColor = mTextPowerSaveColor;
                 }
             } else {
-                batteryOutPercentage.setTextColor(mBatteryBarColor);
+                targetColor = mBatteryBarColor;
+            }
+
+            if (batteryOutPercentage.getCurrentTextColor() != targetColor) {
+                batteryOutPercentage.setTextColor(targetColor);
             }
         }
         if (!CustomBatteryEnabled) return;
@@ -573,23 +609,23 @@ public class BatteryStyleManager extends XposedMods {
         TextView batteryInPercentage = null;
         if (view instanceof LinearLayout) {
             try {
-                batteryIcon = view.findViewById(mContext.getResources().getIdentifier("battery_icon_view", "id", mContext.getPackageName()));
-            } catch (Throwable ignored) {
-                log("battery_icon_view not found");
-            }
-            for (String s : batteryCharging) {
+                if (ID_BATTERY_ICON_VIEW != 0) batteryIcon = view.findViewById(ID_BATTERY_ICON_VIEW);
+            } catch (Throwable ignored) {}
+
+            for (Integer id : ID_BATTERY_CHARGING_VIEWS) {
                 try {
-                    chargingIcon = view.findViewById(mContext.getResources().getIdentifier(s, "id", SYSTEM_UI));
-                } catch (Throwable ignored) {
-                    log(s + " not found");
-                }
+                    chargingIcon = view.findViewById(id);
+                    if (chargingIcon != null) break;
+                } catch (Throwable ignored) {}
             }
+
             try {
-                batteryInPercentage = view.findViewById(mContext.getResources().getIdentifier("battery_text", "id", mContext.getPackageName()));
-                batteryInPercentage.setVisibility(View.GONE);
-            } catch (Throwable ignored) {
-                log("battery_text not found");
-            }
+                if (ID_BATTERY_TEXT != 0) {
+                    batteryInPercentage = view.findViewById(ID_BATTERY_TEXT);
+                    if (batteryInPercentage != null) batteryInPercentage.setVisibility(View.GONE);
+                }
+            } catch (Throwable ignored) {}
+
             for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
                 View child = ((ViewGroup) view).getChildAt(i);
                 if (child instanceof FrameLayout) {
