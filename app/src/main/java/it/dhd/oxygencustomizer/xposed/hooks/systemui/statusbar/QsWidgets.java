@@ -301,8 +301,10 @@ public class QsWidgets extends XposedMods {
             TouchHandler
                     .before("onInterceptTouchEvent")
                     .run(param -> {
-                        XposedBridge.log("QsWidgets: onInterceptTouchEvent");
                         MotionEvent event = (MotionEvent) param.args[0];
+                        if (event != null && event.getAction() == MotionEvent.ACTION_DOWN) {
+                            XposedBridge.log("QsWidgets: onInterceptTouchEvent (ACTION_DOWN)");
+                        }
                         hookTouchHandler(param, event, "onInterceptTouchEvent");
                     });
 
