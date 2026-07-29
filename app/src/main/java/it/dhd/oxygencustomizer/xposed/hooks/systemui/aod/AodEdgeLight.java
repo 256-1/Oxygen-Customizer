@@ -306,8 +306,8 @@ public class AodEdgeLight extends XposedMods {
         AodManager
                 .before("notNeedWakeAod")
                 .run(param -> {
-                    XposedBridge.log("AodEdgeLight: notNeedWakeAod - mIsOc = " + mIsOc);
                     if (mIsOc) {
+                        XposedBridge.log("AodEdgeLight: notNeedWakeAod blocked by OC (mIsOc = true)");
                         param.setResult(false);
                     }
                 });
