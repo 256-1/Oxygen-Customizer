@@ -171,7 +171,6 @@ public class DepthWallpaper extends XposedMods {
         ScrimViewClass
                 .before("setViewAlpha")
                 .run(param -> {
-                    log("ScrimViewExImp setViewAlpha mLayersCreated " + mLayersCreated);
                     if (!mLayersCreated) return;
 
                     //TODO: get scrim name for OOS15
@@ -185,11 +184,12 @@ public class DepthWallpaper extends XposedMods {
 
                     if (mLayersCreated && DWallpaperEnabled) {
                         if (scrimName.toLowerCase().contains("notification")) {
-                            log("ScrimViewExImp Notification Scrim Alpha: " + param.args[0]);
                             float notificationAlpha = (float) param.args[0];
-                            final float finalAlpha = calculateAlpha(notificationAlpha);// * getFloatField(getScrimController(), "mBehindAlpha");
-                            log("ScrimViewExImp finalAlpha: " + finalAlpha);
-                            mLockScreenSubject.post(() -> mLockScreenSubject.setAlpha(finalAlpha));
+                            final float finalAlpha = calculateAlpha(notificationAlpha);
+
+                            if (mLockScreenSubject != null) {
+                                mLockScreenSubject.setAlpha(finalAlpha);
+                            }
                         }
                     }
                 });
@@ -362,6 +362,7 @@ public class DepthWallpaper extends XposedMods {
 
         ReflectedClass OplusWallpaperAnimControllerImpl = ReflectedClass.ofIfPossible("com.oplus.systemui.keyguard.anim.OplusWallpaperAnimControllerImpl");
         ReflectedClass OplusWallpaperAnimControllerImplCompanion = ReflectedClass.ofIfPossible("com.oplus.systemui.keyguard.anim.OplusWallpaperAnimControllerImpl$Companion");
+
         if (OplusWallpaperAnimControllerImplCompanion.getClazz() != null) {
             OplusWallpaperAnimControllerImplCompanion
                     .before("setRemoteWindowScale")
@@ -369,14 +370,17 @@ public class DepthWallpaper extends XposedMods {
                         if (param.args[1] instanceof Float) {
                             float scale = (float) param.args[1];
                             if (mLayersCreated && DWallpaperEnabled && DWMode != 1) {
-                                mLockScreenSubject.post(() -> mLockScreenSubject.setScaleX(scale));
-                                mLockScreenSubject.post(() -> mLockScreenSubject.setScaleY(scale));
-                                mWallpaperBackground.post(() -> mWallpaperBackground.setScaleX(scale));
-                                mWallpaperBackground.post(() -> mWallpaperBackground.setScaleY(scale));
+                                if (mLockScreenSubject != null && mWallpaperBackground != null) {
+                                    mLockScreenSubject.setScaleX(scale);
+                                    mLockScreenSubject.setScaleY(scale);
+                                    mWallpaperBackground.setScaleX(scale);
+                                    mWallpaperBackground.setScaleY(scale);
+                                }
                             }
                         }
                     });
         }
+
         if (OplusWallpaperAnimControllerImpl.getClazz() != null) {
             OplusWallpaperAnimControllerImpl
                     .before("updateWallpaperWindowZoomOut")
@@ -384,10 +388,12 @@ public class DepthWallpaper extends XposedMods {
                         float scale = (float) param.args[0];
                         float finalScale = convertZoomOutByScale(scale);
                         if (mLayersCreated && DWallpaperEnabled && DWMode != 1) {
-                            mLockScreenSubject.post(() -> mLockScreenSubject.setScaleX(finalScale));
-                            mLockScreenSubject.post(() -> mLockScreenSubject.setScaleY(finalScale));
-                            mWallpaperBackground.post(() -> mWallpaperBackground.setScaleX(finalScale));
-                            mWallpaperBackground.post(() -> mWallpaperBackground.setScaleY(finalScale));
+                            if (mLockScreenSubject != null && mWallpaperBackground != null) {
+                                mLockScreenSubject.setScaleX(finalScale);
+                                mLockScreenSubject.setScaleY(finalScale);
+                                mWallpaperBackground.setScaleX(finalScale);
+                                mWallpaperBackground.setScaleY(finalScale);
+                            }
                         }
                     });
         }
