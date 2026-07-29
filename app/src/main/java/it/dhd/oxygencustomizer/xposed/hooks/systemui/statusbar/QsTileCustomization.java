@@ -205,7 +205,6 @@ public class QsTileCustomization extends XposedMods {
     private int qsLabelsColor;
 
     // Brightness Slider
-    private static final List<Object> seekBarInstances = new ArrayList<>();
     private Class<?> ForegroundBlurParam = null;
     private boolean qsBrightnessSliderCustomize, qsBrightnessBackgroundCustomize;
     private int qsBrightnessSliderColorMode, qsBrightnessSliderColor, qsBrightnessBackgroundColor;
@@ -1133,42 +1132,12 @@ public class QsTileCustomization extends XposedMods {
 
         // now hook when update colors
         // public final void drawForegroundBlur(Canvas canvas, Paint paint, ForegroundBlurParam foregroundBlurParam, Path path) {
-        OplusQsVerticalSeekBar
-                .afterConstruction()
-                .run(param -> {
-                    synchronized (seekBarInstances) {
-                        seekBarInstances.add(param.thisObject);
-                    }
-                });
         OplusQsVerticalSeekBar.before("drawForegroundBlur").run(param -> {
             try {
                 Object foregroundBlurParam = param.args[2];
-                Object activeInstance = null;
-                Object activeTrackParam = null;
-
-                synchronized (seekBarInstances) {
-                    for (Object instance : seekBarInstances) {
-                        Object currentTrackParam = getObjectField(instance, "activeTrackParam");
-                        if (currentTrackParam == foregroundBlurParam) {
-                            activeInstance = instance;
-                            activeTrackParam = currentTrackParam;
-                            break;
-                        }
-                    }
-                }
-
-                if (activeInstance == null && !seekBarInstances.isEmpty()) {
-                    activeInstance = seekBarInstances.get(seekBarInstances.size() - 1);
-                    activeTrackParam = getObjectField(activeInstance, "activeTrackParam");
-                }
-
+                Object activeInstance = param.thisObject;
+                Object activeTrackParam = getObjectField(activeInstance, "activeTrackParam");
                 boolean isActive = (foregroundBlurParam == activeTrackParam);
-
-                log("QsTileCustomization: Instance: " + activeInstance +
-                        " | FG Param: " + foregroundBlurParam +
-                        " | Active Param: " + activeTrackParam +
-                        " | IsActive: " + isActive);
-
                 Object newForeground;
                 if (isActive) {
                     if (!qsBrightnessSliderCustomize || qsBrightnessSliderColorMode == 0) {
@@ -1186,7 +1155,7 @@ public class QsTileCustomization extends XposedMods {
                 param.args[2] = newForeground;
 
             } catch (Throwable t) {
-                XposedBridge.log("Error in drawForegroundBlur hook: " + t);
+                // XposedBridge.log("Error in drawForegroundBlur hook: " + t);
             }
         });
 
