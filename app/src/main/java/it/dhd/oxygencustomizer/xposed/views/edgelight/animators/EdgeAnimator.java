@@ -183,13 +183,9 @@ public abstract class EdgeAnimator {
     }
 
     protected final void log(String message) {
-        mEdgeLightView.logD(this.getClass().getSimpleName() + " - " + message + "\n" +
-                "mAnimating = " + mAnimating + "\n" +
-                "mEdgeLightWidth = " + mEdgeLightWidth + "\n" +
-                "mScreenRadius = " + mScreenRadius + "\n" +
-                "mAnimationDuration = " + mAnimationDuration + "\n" +
-                "mPulsingDuration = " + mPulsingDuration + "\n" +
-                "mFinalAnimDuration = " + mFinalAnimDuration);
+        if (!it.dhd.oxygencustomizer.BuildConfig.DEBUG) return;
+
+        mEdgeLightView.logD(this.getClass().getSimpleName() + " - " + message);
     }
 
     public boolean isAnimating() {

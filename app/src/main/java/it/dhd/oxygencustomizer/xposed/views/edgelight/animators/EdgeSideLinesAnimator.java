@@ -84,7 +84,7 @@ public class EdgeSideLinesAnimator extends EdgeAnimator {
             currentHeight = (float) animation.getAnimatedValue();
             mEdgePaint.setShader(getShader());
             mEdgeBlurPaint.setShader(getShader());
-            log("animationUpdateListener - currentHeight = " + currentHeight);
+            //log("animationUpdateListener - currentHeight = " + currentHeight);
             postInvalidate();
         });
         mAnimator.start();

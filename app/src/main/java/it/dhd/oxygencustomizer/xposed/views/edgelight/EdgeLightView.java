@@ -314,6 +314,7 @@ public class EdgeLightView extends View {
     }
 
     public void logD(String msg) {
+        if (!it.dhd.oxygencustomizer.BuildConfig.DEBUG) return;
         if (mSettingsInterface) {
             Log.w("EdgeLightView", msg);
         } else {

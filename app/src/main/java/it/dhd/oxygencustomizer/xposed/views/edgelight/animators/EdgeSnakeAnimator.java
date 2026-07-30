@@ -65,7 +65,7 @@ public class EdgeSnakeAnimator extends EdgeLineAnimator {
             if (snakeStart < 0) snakeStart = 0;
             if (snakeEnd > pathLength) snakeEnd = pathLength;
 
-            log("snakeStart: " + snakeStart + " snakeEnd: " + snakeEnd);
+            //log("snakeStart: " + snakeStart + " snakeEnd: " + snakeEnd);
 
             postInvalidate();
         });
