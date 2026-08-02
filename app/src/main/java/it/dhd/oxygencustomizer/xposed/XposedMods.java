@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import java.lang.reflect.Field;
+import java.util.Set;
 
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -20,6 +21,10 @@ public abstract class XposedMods {
     }
 
     public abstract void updatePrefs(String... Key);
+
+    public Set<String> getRelevantPrefs() {
+        return null;
+    }
 
     public abstract void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable;
 

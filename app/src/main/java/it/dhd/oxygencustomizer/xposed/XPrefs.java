@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.Set;
+
 import it.dhd.oxygencustomizer.BuildConfig;
 import it.dhd.oxygencustomizer.utils.Constants;
 import it.dhd.oxygencustomizer.xposed.utils.ExtendedRemotePreferences;
@@ -29,8 +31,13 @@ public class XPrefs {
             return;
 
         boolean moreLogging = Xprefs.getBoolean(Constants.Preferences.General.PREF_MORE_LOGGING, false);
+        boolean hasKey = key.length > 0 && key[0] != null && !key[0].isEmpty();
 
         for (XposedMods thisMod : XPLauncher.runningMods) {
+            Set<String> relevant = thisMod.getRelevantPrefs();
+            if (hasKey && relevant != null && !relevant.isEmpty() && !relevant.contains(key[0]))
+                continue;
+
             thisMod.mDebug = BuildConfig.VERSION_NAME.contains("nightly") || moreLogging;
             thisMod.updatePrefs(key);
         }

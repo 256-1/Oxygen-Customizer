@@ -15,6 +15,8 @@ import android.os.SystemClock;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -47,12 +49,26 @@ public class SleepOnFlat extends XposedMods {
         super(context);
     }
 
+    private static final List<String> MY_PREFS = Arrays.asList(
+            "SleepOnFlatScreen", "FlatStandbyTime", "SleepOnFlatRespectWakeLock"
+    );
+
+    @Override
+    public Set<String> getRelevantPrefs() {
+        return new HashSet<>(MY_PREFS);
+    }
+
     @Override
     public void updatePrefs(String... Key) {
         SleepOnFlatScreen = Xprefs.getBoolean("SleepOnFlatScreen", false);
         FlatStandbyTimeMillis = Xprefs.getSliderInt("FlatStandbyTime", 5) * 1000L;
         SleepOnFlatRespectWakeLock = Xprefs.getBoolean("SleepOnFlatRespectWakeLock", true);
-        resetTime("pref update");
+
+        if (Key.length == 0 || Key[0] == null
+                || Key[0].isEmpty()
+                || MY_PREFS.stream().anyMatch(k -> k.equals(Key[0]))) {
+            resetTime("pref update");
+        }
     }
 
     @Override

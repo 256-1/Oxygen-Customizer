@@ -17,6 +17,7 @@ import android.text.TextUtils;
 
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -37,6 +38,16 @@ public class OplusStartingWindowManager extends XposedMods {
     private boolean mForceAllApps = false;
     private Set<String> mLagFixApps = new HashSet<>();
     private boolean settingsUpdated = false;
+
+    private static final Set<String> MY_PREFS = new HashSet<>(Arrays.asList(
+            "fix_lag_switch", "fix_lag_force_all_apps", "lag_fix_apps"
+    ));
+
+    @Override
+    public Set<String> getRelevantPrefs() {
+        return MY_PREFS;
+    }
+
     final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -76,6 +87,8 @@ public class OplusStartingWindowManager extends XposedMods {
             XPLauncher.enqueueProxyCommand((proxy) -> proxy.runCommand("echo " + getFormattedDate() + " - updatePrefs: Enabled Lag Fix: " + mEnableLagFix + " Force All Apps: " + mForceAllApps + " Lag Fix Apps: " + mLagFixApps + " >> " + LOG_FILE));
         } catch (Throwable ignored) {
         }
+
+        settingsUpdated = true;
     }
 
     @Override
