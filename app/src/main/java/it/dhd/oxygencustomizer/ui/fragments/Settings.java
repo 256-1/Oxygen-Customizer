@@ -209,7 +209,7 @@ public class Settings extends ControlledPreferenceFragmentCompat {
         this.export = export;
         fileIntent.setAction(export ? Intent.ACTION_CREATE_DOCUMENT : Intent.ACTION_GET_CONTENT);
         fileIntent.setType("*/*");
-        fileIntent.putExtra(Intent.EXTRA_TITLE, "OxygenCustomizer_Config" + ".bin");
+        fileIntent.putExtra(Intent.EXTRA_TITLE, "OxygenCustomizer_Config.json");
         mImportExportLauncher.launch(fileIntent);
     }
 
